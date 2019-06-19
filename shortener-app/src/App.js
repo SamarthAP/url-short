@@ -1,9 +1,13 @@
 import React from 'react';
 import './App.css';
+import Shortener from './shortener';
 
 function App() {
   return (
-    <h1>Url Shortener</h1>
+    <div>
+      <h1>Url Shortener</h1>
+      <Shortener />
+    </div>
   );
 }
 
