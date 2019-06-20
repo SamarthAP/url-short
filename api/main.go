@@ -1,12 +1,35 @@
 package main
 
 import (
+	"context"
 	f "fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+func connectMongo() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://dbadmin:dbadmin@urlmaps-74jtc.mongodb.net/test?retryWrites=true&w=majority"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	f.Println("Connected to database")
+}
 
 func getShortURL(w http.ResponseWriter, r *http.Request) {
 	longurl, err := ioutil.ReadAll(r.Body)
@@ -25,6 +48,8 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	connectMongo()
+
 	http.HandleFunc("/api/getshort/", getShortURL)
 
 	f.Println("Server running on port 9000")
