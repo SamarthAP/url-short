@@ -5,6 +5,7 @@ import (
 	f "fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"time"
@@ -13,6 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 
 func connectMongo() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -31,6 +34,14 @@ func connectMongo() {
 	f.Println("Connected to database")
 }
 
+func getRandString(length int) string {
+	str := make([]rune, length)
+	for i := range str {
+		str[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(str)
+}
+
 func getShortURL(w http.ResponseWriter, r *http.Request) {
 	longurl, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -44,6 +55,12 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "can't decode url", http.StatusNotAcceptable)
 		return
 	}
+
+	// Generate 5 letter random string from A-Za-z0-9
+	// Check if string exists in db
+	// If not we use that string and create a db entry for it
+	// Send the string back as the response
+
 	w.Write([]byte(decodedURL))
 }
 
