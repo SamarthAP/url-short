@@ -1,38 +1,20 @@
 package main
 
 import (
-	"context"
 	f "fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
-	"time"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-
-func connectMongo() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://dbadmin:dbadmin@urlmaps-74jtc.mongodb.net/test?retryWrites=true&w=majority"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = client.Ping(ctx, readpref.Primary())
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f.Println("Connected to database")
+type urlmap struct {
+	short string
+	long  string
 }
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 
 func getRandString(length int) string {
 	str := make([]rune, length)
@@ -56,6 +38,8 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// shortURL := getRandString(5)
+
 	// Generate 5 letter random string from A-Za-z0-9
 	// Check if string exists in db
 	// If not we use that string and create a db entry for it
@@ -65,8 +49,6 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	connectMongo()
-
 	http.HandleFunc("/api/getshort/", getShortURL)
 
 	f.Println("Server running on port 9000")
