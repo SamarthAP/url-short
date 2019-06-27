@@ -32,6 +32,10 @@ type urlmap struct {
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 var db *sql.DB
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func getRandString(length int) string {
 	str := make([]rune, length)
 	for i := range str {
@@ -41,6 +45,7 @@ func getRandString(length int) string {
 }
 
 func getShortURL(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	longurl, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal("Error reading body:", err)
@@ -48,6 +53,7 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	decodedURL, err := url.QueryUnescape(string(longurl))
+	f.Println(decodedURL)
 	if err != nil {
 		log.Fatal("Error decoding url:", err)
 		http.Error(w, "can't decode url", http.StatusNotAcceptable)
