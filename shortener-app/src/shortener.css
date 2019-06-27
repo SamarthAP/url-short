@@ -9,19 +9,23 @@ input {
 
 p {
     text-align: right;
-    margin-top: 1rem;
 }
 
 button {
-    margin-top: 1rem;
+    margin: auto 0;
+    width: 5rem;
 }
 
 .container {
     width: 40rem;
 }
 
-.links {
-    float: right;
+.flex-horizontal {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.text {
+    font-size: 16pt;
 }
