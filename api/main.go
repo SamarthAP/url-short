@@ -1,12 +1,27 @@
 package main
 
+// import (
+// 	"database/sql"
+// 	f "fmt"
+// 	"io/ioutil"
+// 	"log"
+// 	"math/rand"
+// 	"net/http"
+// 	"net/url"
+
+// 	_ "github.com/mattn/go-sqlite3"
+// )
+
 import (
+	"database/sql"
 	f "fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type urlmap struct {
@@ -15,6 +30,7 @@ type urlmap struct {
 }
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+var db *sql.DB
 
 func getRandString(length int) string {
 	str := make([]rune, length)
@@ -38,22 +54,51 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// shortURL := getRandString(5)
+	// Generate short url
+	shortURL := getRandString(5)
 
-	// Generate 5 letter random string from A-Za-z0-9
-	// Check if string exists in db
-	// If not we use that string and create a db entry for it
-	// Send the string back as the response
+	// Check if db alread has short url
+	sqlCheck := "select maps.Short from maps where maps.Short = '" + shortURL + "'"
+	shortInDB, err := db.Query(sqlCheck)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shortInDB.Close()
 
-	w.Write([]byte(decodedURL))
+	var shortStatus string // Status of the short url; if it's already in db or not
+	shortInDB.Scan(&shortStatus)
+	if shortStatus == "" {
+		sqlInsert := "insert into maps values ('" + shortURL + "'," + "'" + decodedURL + "')"
+		_, err := db.Exec(sqlInsert)
+		if err != nil {
+			log.Fatal(err)
+			w.Write([]byte("null"))
+		} else {
+			w.Write([]byte(shortURL))
+		}
+	} else {
+		w.Write([]byte("null"))
+	}
 }
 
 func main() {
 	http.HandleFunc("/api/getshort/", getShortURL)
 
+	var err error
+	db, err = sql.Open("sqlite3", "./urlmap.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		f.Println(err)
+	}
+
 	f.Println("Server running on port 9000")
 
-	err := http.ListenAndServe(":9000", nil)
+	err = http.ListenAndServe(":9000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
