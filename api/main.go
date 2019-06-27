@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -53,7 +54,7 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	decodedURL, err := url.QueryUnescape(string(longurl))
-	f.Println(decodedURL)
+	f.Println("Getting short for:", decodedURL)
 	if err != nil {
 		log.Fatal("Error decoding url:", err)
 		http.Error(w, "can't decode url", http.StatusNotAcceptable)
@@ -87,8 +88,38 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func redirect(w http.ResponseWriter, r *http.Request) {
+	link := strings.TrimLeft(r.URL.Path, "/") // Short url
+
+	// Get long url
+	sqlCheck := "select maps.Long from maps where maps.Short = '" + link + "'"
+	shortInDB, err := db.Query(sqlCheck)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer shortInDB.Close()
+
+	var redirectURL string
+
+	for shortInDB.Next() {
+		err := shortInDB.Scan(&redirectURL)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Redirect
+	if redirectURL == "" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Shortened url does not exist"))
+	} else {
+		http.Redirect(w, r, redirectURL, 302)
+	}
+}
+
 func main() {
 	http.HandleFunc("/api/getshort/", getShortURL)
+	http.HandleFunc("/", redirect)
 
 	var err error
 	db, err = sql.Open("sqlite3", "./urlmap.db")
