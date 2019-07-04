@@ -1,17 +1,5 @@
 package main
 
-// import (
-// 	"database/sql"
-// 	f "fmt"
-// 	"io/ioutil"
-// 	"log"
-// 	"math/rand"
-// 	"net/http"
-// 	"net/url"
-
-// 	_ "github.com/mattn/go-sqlite3"
-// )
-
 import (
 	"database/sql"
 	f "fmt"
