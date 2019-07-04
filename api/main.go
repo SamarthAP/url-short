@@ -91,30 +91,33 @@ func getShortURL(w http.ResponseWriter, r *http.Request) {
 func redirect(w http.ResponseWriter, r *http.Request) {
 	link := strings.TrimLeft(r.URL.Path, "/") // Short url
 
-	// Get long url
-	sqlCheck := "select maps.Long from maps where maps.Short = '" + link + "'"
-	shortInDB, err := db.Query(sqlCheck)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer shortInDB.Close()
-
-	var redirectURL string
-
-	for shortInDB.Next() {
-		err := shortInDB.Scan(&redirectURL)
+	if link != "" {
+		// Get long url
+		sqlCheck := "select maps.Long from maps where maps.Short = '" + link + "'"
+		shortInDB, err := db.Query(sqlCheck)
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer shortInDB.Close()
+
+		var redirectURL string
+
+		for shortInDB.Next() {
+			err := shortInDB.Scan(&redirectURL)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		// Redirect
+		if redirectURL == "" {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("Shortened url does not exist"))
+		} else {
+			http.Redirect(w, r, redirectURL, 302)
+		}
 	}
 
-	// Redirect
-	if redirectURL == "" {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Shortened url does not exist"))
-	} else {
-		http.Redirect(w, r, redirectURL, 302)
-	}
 }
 
 func main() {

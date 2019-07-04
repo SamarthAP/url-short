@@ -28,17 +28,27 @@ class Shortener extends React.Component {
         })
     }
 
+    componentWillMount() {
+        let url = window.location.href;
+        console.log(url);
+        let short = url.slice(url.match("localhost:3000").index + "localhost:3000".length + 1)
+        if (short != "") {
+            window.location.href = 'http://localhost:9000/' + short;
+        }
+        //window.location.href = 'http://localhost:3000/';
+    }
+
     render() {
         return (
             <div className="container">
                 <input onChange={this.onChangeHandler}></input>
                 <div className="flex-horizontal">
                     <button className="left" onClick={this.onClickHandler}>Shorten</button>
-                    <p className="right">Longer link this is long</p>
+                    <p className="right">{this.state.long}</p>
                 </div>
                 <div className="flex-horizontal">
                     <button className="left">Copy</button>
-                    <p className="right">Short link this is short</p>
+                    <p className="right">{this.state.short}</p>
                 </div>
             </div>
         )
